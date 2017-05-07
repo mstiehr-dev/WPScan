@@ -1,5 +1,6 @@
 package com.mstiehr_dev.wpscan;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +12,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -36,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements Observer
 
     ListView listView;
     BaseAdapter adapter;
+    ProgressDialog progress;
 
 
     @Override
@@ -50,6 +54,10 @@ public class MainActivity extends AppCompatActivity implements Observer
         adapter = new ScanResultAdapter();
         listView.setAdapter(adapter);
 
+        progress = new ProgressDialog(this);
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setTitle("scanning networks...");
+
 
         registerReceiver(new BroadcastReceiver() {
             @Override
@@ -62,12 +70,16 @@ public class MainActivity extends AppCompatActivity implements Observer
 
         wifiHelper = new WifiHelper(App.get(this));
         wifiHelper.addObserver(this);
+        progress.show();
         wifiHelper.doScan();
     }
 
     @Override
     public void update(Observable o, Object arg)
     {
+        if(null!=progress && progress.isShowing())
+            progress.dismiss();
+
         scanResults.clear();
         scanResults.addAll(wifiHelper.getScanResults());
         adapter.notifyDataSetChanged();
@@ -111,5 +123,27 @@ public class MainActivity extends AppCompatActivity implements Observer
         public void notifyDataSetChanged() {
             super.notifyDataSetChanged();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add("refresh");
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        if("refresh".equals(item.getTitle()))
+        {
+            progress.show();
+            scanResults.clear();
+            wifiHelper.doScan();
+
+            return true;
+        }
+
+        return false;
     }
 }

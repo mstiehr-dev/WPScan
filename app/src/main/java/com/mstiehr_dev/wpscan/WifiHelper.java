@@ -34,6 +34,7 @@ public class WifiHelper extends Observable
             Log.d(TAG, "doScan: wifi is not enabled");
         }
 
+        scanResults.clear();
         wifiManager.startScan();
     }
 
