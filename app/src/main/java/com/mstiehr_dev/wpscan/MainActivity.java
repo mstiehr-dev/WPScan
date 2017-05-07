@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
-import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -16,26 +15,21 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements Observer
 {
     private static final String TAG = "MainActivity";
 
     WifiHelper wifiHelper;
-    List<ScanResult> scanResults;
+    List<ScanResult> scanResults;// = new ArrayList<>();
 
     ListView listView;
     BaseAdapter adapter;
@@ -47,12 +41,18 @@ public class MainActivity extends AppCompatActivity implements Observer
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        scanResults = new ArrayList<>();
-
         listView = (ListView) findViewById(android.R.id.list);
         listView.setEmptyView(findViewById(android.R.id.empty));
         adapter = new ScanResultAdapter();
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final ScanResult item = (ScanResult) adapter.getItem(position);
+
+                startActivity(DetailActivity.newIntent(getApplicationContext(), item));
+            }
+        });
 
         progress = new ProgressDialog(this);
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -80,8 +80,7 @@ public class MainActivity extends AppCompatActivity implements Observer
         if(null!=progress && progress.isShowing())
             progress.dismiss();
 
-        scanResults.clear();
-        scanResults.addAll(wifiHelper.getScanResults());
+        scanResults = wifiHelper.getScanResults();
         adapter.notifyDataSetChanged();
     }
 
@@ -89,6 +88,9 @@ public class MainActivity extends AppCompatActivity implements Observer
     {
         @Override
         public int getCount() {
+            if(null == scanResults)
+                return 0;
+
             return scanResults.size();
         }
 
@@ -138,7 +140,6 @@ public class MainActivity extends AppCompatActivity implements Observer
         if("refresh".equals(item.getTitle()))
         {
             progress.show();
-            scanResults.clear();
             wifiHelper.doScan();
 
             return true;

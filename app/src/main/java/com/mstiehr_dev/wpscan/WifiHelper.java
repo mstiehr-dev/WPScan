@@ -6,6 +6,7 @@ import android.net.wifi.WifiManager;
 import android.net.wifi.WpsInfo;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
@@ -18,13 +19,13 @@ public class WifiHelper extends Observable
 
     private App context;
     private WifiManager wifiManager;
-    private Set<ScanResult> scanResults;
+    private List<ScanResult> scanResults;
 
     public WifiHelper(App context)
     {
         this.context = context;
         wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        scanResults = new HashSet<>();
+        scanResults = new ArrayList<>();
     }
 
     public void doScan()
@@ -43,11 +44,7 @@ public class WifiHelper extends Observable
         List<ScanResult> tResults = wifiManager.getScanResults();
         for(ScanResult result : tResults)
         {
-            Log.d(TAG, result.SSID + " -> " + result.capabilities);
-            if(result.capabilities.contains("WPS"))
-            {
-                scanResults.add(result);
-            }
+            scanResults.add(result);
         }
 
 //        for(ScanResult wpsResult : scanResults)
@@ -84,7 +81,7 @@ public class WifiHelper extends Observable
         });
     }
 
-    public Set<ScanResult> getScanResults() {
+    public List<ScanResult> getScanResults() {
         return scanResults;
     }
 }
